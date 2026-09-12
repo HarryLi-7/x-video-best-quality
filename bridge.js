@@ -394,7 +394,6 @@
     style.textContent = [
       ".xvbq-hidden-ad { display: none !important; }",
       ".xvbq-hidden-promo { display: none !important; }",
-      "[data-testid='tweetPhoto'] { position: relative !important; }",
       ".xvbq-orig-download-btn {",
       "  position: absolute;",
       "  top: 10px;",
@@ -507,10 +506,10 @@
     }
     try {
       var u = new URL(url);
-      u.searchParams.set("name", "orig");
+      u.searchParams.set("name", "large");
       return u.toString();
     } catch (e) {
-      return url.replace(/name=[a-z0-9_]+/i, "name=orig");
+      return url.replace(/name=[a-z0-9_]+/i, "name=large");
     }
   }
 
@@ -520,7 +519,7 @@
       downloadBtn = document.createElement("button");
       downloadBtn.className = "xvbq-orig-download-btn" + (isModal ? " xvbq-modal-download-btn" : "");
       downloadBtn.innerHTML = "<span>💾</span><span>下载此张原图</span>";
-      downloadBtn.title = "下载此张无损原画照片 (name=orig)";
+      downloadBtn.title = "下载此张高清原画照片";
       downloadBtn.addEventListener("click", function (ev) {
         ev.preventDefault();
         ev.stopPropagation();
@@ -579,17 +578,9 @@
       return;
     }
 
+    // 绝不直接篡改页面活体 img.src 与 img.srcset，确保 Twitter 原生图片流畅正常加载与大图预览
     var images = document.querySelectorAll("img[src*='pbs.twimg.com/media/']");
     images.forEach(function (img) {
-      var currentSrc = img.getAttribute("src") || "";
-      if (currentSrc && currentSrc.indexOf("name=orig") === -1) {
-        var origUrl = convertToOrigImageUrl(currentSrc);
-        img.src = origUrl;
-        if (img.srcset) {
-          img.removeAttribute("srcset");
-        }
-      }
-
       // 1. 全屏大图查看器 (Modal/Lightbox)
       var modalContainer = img.closest("[aria-modal='true'], [role='dialog']");
       if (modalContainer) {

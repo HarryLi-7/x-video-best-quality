@@ -1,0 +1,1557 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>X Video Best Quality - 交互原型</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif;
+      
+      --canvas-bg: #060709;
+      --bg: #0b0d11;
+      --panel-bg: rgba(18, 20, 28, 0.88);
+      --card-bg: rgba(255, 255, 255, 0.045);
+      --card-hover: rgba(255, 255, 255, 0.08);
+      --border: rgba(255, 255, 255, 0.09);
+      --border-strong: rgba(255, 255, 255, 0.18);
+      --text: #f7f9fa;
+      --text-muted: rgba(247, 249, 250, 0.65);
+      --text-sub: rgba(247, 249, 250, 0.42);
+      
+      --accent: #ffffff;
+      --accent-light: #ffffff;
+      --accent-glow: rgba(255, 255, 255, 0.2);
+      --accent-soft: rgba(255, 255, 255, 0.08);
+      --switch-off: rgba(255, 255, 255, 0.16);
+      --shadow: 0 24px 50px rgba(0, 0, 0, 0.6), 0 0 0 1px var(--border);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background: var(--canvas-bg);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 30px 20px;
+      color: var(--text);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* 顶部控制栏 */
+    .top-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      width: 100%;
+      max-width: 860px;
+      margin-bottom: 24px;
+      padding: 10px 18px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      backdrop-filter: blur(16px);
+    }
+
+    .toolbar-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .demo-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .toolbar-buttons {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .demo-btn {
+      font-size: 12px;
+      font-weight: 600;
+      padding: 6px 13px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: var(--card-bg);
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 160ms cubic-bezier(0.16, 1, 0.3, 1);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .demo-btn:hover {
+      background: var(--accent-soft);
+      border-color: var(--accent);
+      color: var(--accent-light);
+      transform: translateY(-1px);
+    }
+
+    /* 浏览器图标角标模拟 */
+    .action-badge-preview {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 4px 10px;
+      background: rgba(0, 0, 0, 0.35);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 11px;
+      color: var(--text-sub);
+    }
+
+    .mock-chrome-icon {
+      position: relative;
+      width: 24px;
+      height: 24px;
+      background: #1e232d;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid var(--border);
+    }
+
+    .mock-chrome-badge {
+      position: absolute;
+      bottom: -3px;
+      right: -5px;
+      background: var(--accent);
+      color: #000;
+      font-size: 9px;
+      font-weight: 900;
+      padding: 0 4px;
+      height: 13px;
+      line-height: 13px;
+      border-radius: 999px;
+      box-shadow: 0 0 8px var(--accent-glow);
+      letter-spacing: -0.2px;
+      transition: all 200ms ease;
+    }
+
+    /* 双栏演示主布局 */
+    .showcase-grid {
+      display: grid;
+      grid-template-columns: 460px 340px;
+      gap: 28px;
+      width: 100%;
+      max-width: 860px;
+      align-items: start;
+    }
+
+    /* 左侧：推文模拟卡片 (无微角标干涉，纯净播放) */
+    .tweet-card {
+      background: #000000;
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      box-shadow: 0 16px 36px rgba(0,0,0,0.5);
+    }
+
+    .tweet-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .tweet-author {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .tweet-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #1d9bf0, #00ba7c);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      font-weight: 800;
+      color: #fff;
+    }
+
+    .author-meta {
+      display: flex;
+      flex-direction: column;
+      line-height: 1.25;
+    }
+
+    .author-name-row {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .author-name {
+      font-size: 14px;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .author-badge {
+      color: #1d9bf0;
+      display: flex;
+      align-items: center;
+    }
+
+    .author-handle {
+      font-size: 13px;
+      color: var(--text-sub);
+    }
+
+    .tweet-content {
+      font-size: 14px;
+      line-height: 1.45;
+      color: #e7e9ea;
+    }
+
+    /* 模拟推文视频播放器容器 */
+    .mock-player {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      background: #090c10;
+      border-radius: 12px;
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: inset 0 0 60px rgba(0,0,0,0.8);
+    }
+
+    .player-bg {
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at 60% 40%, rgba(16, 185, 129, 0.15), transparent 70%),
+                  radial-gradient(circle at 20% 80%, rgba(29, 155, 240, 0.18), transparent 60%);
+      transition: all 400ms ease;
+    }
+
+    .player-center-icon {
+      position: relative;
+      z-index: 2;
+      width: 54px;
+      height: 54px;
+      border-radius: 50%;
+      background: rgba(16, 185, 129, 0.9);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 24px rgba(16, 185, 129, 0.5);
+      cursor: pointer;
+      transition: transform 180ms ease;
+    }
+
+    .player-center-icon:hover {
+      transform: scale(1.08);
+    }
+
+    .player-controls {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      padding: 10px 14px;
+      background: linear-gradient(to top, rgba(0,0,0,0.85), transparent);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      z-index: 3;
+    }
+
+    .progress-bar-wrap {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: rgba(255,255,255,0.2);
+    }
+
+    .progress-bar-fill {
+      width: 48%;
+      height: 100%;
+      background: var(--accent);
+      box-shadow: 0 0 6px var(--accent-glow);
+    }
+
+    .control-time {
+      font-size: 11px;
+      font-weight: 500;
+      color: #d1d5db;
+    }
+
+    /* 右侧：Chrome 扩展弹窗容器 */
+    .popup-wrapper {
+      position: relative;
+    }
+
+    .popup-container {
+      width: 340px;
+      padding: 14px;
+      border-radius: 20px;
+      background: var(--panel-bg);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(32px);
+      -webkit-backdrop-filter: blur(32px);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      border: 1px solid var(--border);
+    }
+
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-bottom: 2px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .brand-logo {
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
+      background: #000;
+      border: 1px solid var(--border-strong);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+    }
+
+    .brand-x {
+      width: 15px;
+      height: 15px;
+    }
+
+    .brand-info {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .brand-title {
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+    }
+
+    .brand-badge {
+      font-size: 9px;
+      font-weight: 800;
+      background: rgba(255, 255, 255, 0.12);
+      color: var(--text-muted);
+      padding: 1px 5px;
+      border-radius: 4px;
+      letter-spacing: 0.5px;
+    }
+
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+
+    .status-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 8px var(--accent-glow);
+    }
+
+    .status-dot.is-disabled {
+      background: var(--text-sub);
+      box-shadow: none;
+    }
+
+    .control-card {
+      padding: 10px 12px;
+      border-radius: 12px;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+    }
+
+    .toggle-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .toggle-copy {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .toggle-title {
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .toggle-desc {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .switch {
+      position: relative;
+      width: 38px;
+      height: 22px;
+      flex-shrink: 0;
+    }
+
+    .switch input {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      cursor: pointer;
+    }
+
+    .switch-track {
+      position: absolute;
+      inset: 0;
+      border-radius: 999px;
+      background: var(--switch-off);
+      transition: background-color 180ms ease, box-shadow 180ms ease;
+    }
+
+    .switch-track::after {
+      content: "";
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: #ffffff;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.25);
+      transition: transform 180ms cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .switch input:checked + .switch-track {
+      background: var(--accent);
+      box-shadow: 0 0 10px var(--accent-glow);
+    }
+
+    .switch input:checked + .switch-track::after {
+      transform: translateX(16px);
+    }
+
+    .quality-section {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 2px;
+    }
+
+    .section-title {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .section-hint {
+      font-size: 11px;
+      color: var(--text-sub);
+    }
+
+    .pill-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+    }
+
+    .pill-btn {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 7px 4px;
+      border-radius: 10px;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 160ms cubic-bezier(0.16, 1, 0.3, 1);
+      font-family: inherit;
+      user-select: none;
+    }
+
+    .pill-btn:hover {
+      background: var(--card-hover);
+      border-color: var(--border-strong);
+      color: var(--text);
+      transform: translateY(-1px);
+    }
+
+    .pill-btn:active {
+      transform: translateY(0) scale(0.97);
+    }
+
+    .pill-btn.is-active {
+      background: var(--accent-soft);
+      border-color: var(--accent);
+      color: #ffffff;
+      box-shadow: 0 0 12px var(--accent-glow);
+    }
+
+    .pill-btn.is-active .pill-main {
+      color: var(--accent-light);
+    }
+
+    .pill-btn.is-active .pill-sub {
+      color: rgba(255, 255, 255, 0.8);
+    }
+
+    .pill-btn--full {
+      grid-column: 1 / -1;
+      flex-direction: row;
+      justify-content: space-between;
+      padding: 9px 12px;
+    }
+
+    .pill-content {
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+    }
+
+    .pill-main {
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: -0.2px;
+    }
+
+    .pill-sub {
+      font-size: 10px;
+      color: var(--text-sub);
+    }
+
+    .pill-badge {
+      font-size: 9px;
+      font-weight: 800;
+      background: rgba(255, 255, 255, 0.1);
+      color: var(--text-muted);
+      padding: 2px 6px;
+      border-radius: 999px;
+    }
+
+    .pill-btn.is-active .pill-badge {
+      background: var(--accent);
+      color: #060709;
+    }
+
+    .media-card {
+      padding: 10px 12px;
+      border-radius: 12px;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .media-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .media-title-wrap {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .media-icon {
+      color: var(--accent);
+    }
+
+    .media-heading {
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: -0.2px;
+    }
+
+    .site-badge {
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--accent-light);
+      background: var(--accent-soft);
+      padding: 2px 7px;
+      border-radius: 999px;
+    }
+
+    .stat-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      padding: 8px 10px;
+      border-radius: 10px;
+      background: rgba(0, 0, 0, 0.18);
+      border: 1px solid rgba(255, 255, 255, 0.03);
+    }
+
+    .stat-box {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .stat-label {
+      font-size: 10px;
+      color: var(--text-sub);
+    }
+
+    .stat-value {
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: -0.2px;
+    }
+
+    .stat-value--highlight {
+      color: var(--accent-light);
+    }
+
+    .info-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .info-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 11px;
+      gap: 12px;
+    }
+
+    .info-key {
+      color: var(--text-sub);
+      flex-shrink: 0;
+    }
+
+    .info-val {
+      font-weight: 600;
+      color: var(--text-muted);
+      text-align: right;
+    }
+
+    .info-val--truncate {
+      max-width: 170px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* 快捷操作栏 */
+    .action-buttons-row {
+      display: flex;
+      gap: 8px;
+      margin-top: 2px;
+    }
+
+    .action-btn {
+      flex: 1;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 7px 10px;
+      border-radius: 9px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      font: inherit;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 160ms ease;
+    }
+
+    .action-btn:hover {
+      background: rgba(16, 185, 129, 0.12);
+      border-color: rgba(16, 185, 129, 0.35);
+      color: var(--text);
+      transform: translateY(-1px);
+    }
+
+    .action-btn--success {
+      background: rgba(16, 185, 129, 0.25) !important;
+      border-color: var(--accent) !important;
+      color: #ffffff !important;
+    }
+
+    /* 播放控制增强卡片 */
+    .playback-card {
+      padding: 10px 12px;
+      border-radius: 12px;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .playback-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .playback-title-wrap {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .playback-icon {
+      color: var(--accent);
+    }
+
+    .playback-title {
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: -0.2px;
+    }
+
+    .pip-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 4px 9px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      font: inherit;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 160ms ease;
+    }
+
+    .pip-btn:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: var(--border-strong);
+      color: var(--text);
+    }
+
+    .pip-btn.is-active {
+      background: var(--accent-soft);
+      border-color: var(--accent);
+      color: var(--accent-light);
+    }
+
+    .speed-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .speed-label {
+      font-size: 11px;
+      color: var(--text-sub);
+    }
+
+    .speed-pills {
+      display: flex;
+      gap: 4px;
+    }
+
+    .speed-pill {
+      padding: 3px 8px;
+      border-radius: 6px;
+      border: 1px solid transparent;
+      background: rgba(255, 255, 255, 0.04);
+      color: var(--text-muted);
+      font: inherit;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 140ms ease;
+    }
+
+    .speed-pill:hover {
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--text);
+    }
+
+    .speed-pill.is-active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #060709;
+      font-weight: 700;
+    }
+
+    /* X 深度生态增强设置卡片 */
+    .enhancement-card {
+      padding: 10px 12px;
+      border-radius: 12px;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .enhancement-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .enhancement-title-wrap {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .enhancement-icon {
+      color: var(--accent);
+    }
+
+    .enhancement-title {
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: -0.2px;
+    }
+
+    .enhancement-list {
+      display: flex;
+      flex-direction: column;
+      gap: 9px;
+    }
+
+    .enhancement-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .enhancement-copy {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .enhancement-name {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .enhancement-desc {
+      font-size: 10px;
+      color: var(--text-sub);
+    }
+
+    .mini-switch {
+      position: relative;
+      width: 32px;
+      height: 18px;
+      flex-shrink: 0;
+    }
+
+    .mini-switch input {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      cursor: pointer;
+    }
+
+    .mini-track {
+      position: absolute;
+      inset: 0;
+      border-radius: 999px;
+      background: var(--switch-off);
+      transition: background-color 160ms ease, box-shadow 160ms ease;
+    }
+
+    .mini-track::after {
+      content: "";
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: #ffffff;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
+      transition: transform 160ms cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .mini-switch input:checked + .mini-track {
+      background: var(--accent);
+      box-shadow: 0 0 8px var(--accent-glow);
+    }
+
+    .mini-switch input:checked + .mini-track::after {
+      transform: translateX(14px);
+    }
+
+    /* 底部辅助栏 */
+    .footer-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 4px;
+    }
+
+    .checkbox-wrap {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      color: var(--text-sub);
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .checkbox-wrap input {
+      accent-color: var(--accent);
+      width: 12px;
+      height: 12px;
+    }
+
+    .ghost-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 8px;
+      border-radius: 6px;
+      background: transparent;
+      border: 1px solid transparent;
+      color: var(--text-sub);
+      font: inherit;
+      font-size: 11px;
+      cursor: pointer;
+      transition: all 140ms ease;
+    }
+
+    .ghost-btn:hover {
+      background: var(--card-bg);
+      border-color: var(--border);
+      color: var(--text-muted);
+    }
+    .demo-photo-btn {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: rgba(10, 10, 12, 0.9);
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      color: #fff;
+      border-radius: 999px;
+      padding: 5px 12px;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      backdrop-filter: blur(12px);
+      box-shadow: 0 4px 16px rgba(0,0,0,0.6);
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(-4px);
+      transition: opacity 180ms ease, transform 180ms ease, background 160ms ease, border-color 160ms ease;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      user-select: none;
+    }
+    .demo-photo-btn.visible,
+    .demo-photo-btn:hover {
+      opacity: 1 !important;
+      pointer-events: auto !important;
+      transform: translateY(0) !important;
+    }
+    .demo-photo-btn:hover {
+      background: #ffffff;
+      color: #000000;
+      border-color: #ffffff;
+      box-shadow: 0 4px 20px rgba(255, 255, 255, 0.25);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- 顶部控制与工具栏 -->
+  <header class=top-toolbar>
+    <div class=toolbar-left>
+      <span class=demo-title>
+        <span>🎬</span> X Video Best Quality 演示工作台
+      </span>
+      <!-- 模拟 Chrome 工具栏上的 Action Badge -->
+      <div class=action-badge-preview>
+        <span>浏览器工具栏状态:</span>
+        <div class=mock-chrome-icon title="Chrome 扩展图标">
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="#fff">
+            <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+          </svg>
+          <span class="mock-chrome-badge" id="mockActionBadge">1080</span>
+        </div>
+      </div>
+    </div>
+    <div class=toolbar-buttons>
+      <button class=demo-btn id="mockVideoBtn">
+        <span>📺</span> 模拟捕获 1080p
+      </button>
+      <button class=demo-btn id="mock4KBtn">
+        <span>🚀</span> 模拟捕获 4K (SpaceX)
+      </button>
+    </div>
+  </header>
+
+  <!-- 左右双栏对比展示区 -->
+  <div class=showcase-grid>
+
+    <!-- 左侧：推文模拟卡片 (无微角标干扰，纯净沉浸播放) -->
+    <div class=tweet-card>
+      <div class=tweet-header>
+        <div class=tweet-author>
+          <div class=tweet-avatar id="demoAvatar">S</div>
+          <div class=author-meta>
+            <div class=author-name-row>
+              <span class=author-name id="demoAuthor">SpaceX</span>
+              <span class=author-badge>
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
+                  <path d="M22.25 12c0-1.43-.88-2.67-2.19-3.34.46-1.39.2-2.9-.81-3.91s-2.52-1.27-3.91-.81c-.66-1.31-1.91-2.19-3.34-2.19s-2.67.88-3.33 2.19c-1.4-.46-2.91-.2-3.92.81s-1.26 2.52-.8 3.91c-1.31.67-2.2 1.91-2.2 3.34s.89 2.67 2.2 3.34c-.46 1.39-.21 2.9.8 3.91s2.52 1.26 3.91.81c.67 1.31 1.92 2.19 3.34 2.19s2.68-.88 3.34-2.19c1.39.45 2.9.19 3.91-.82s1.27-2.52.81-3.9c1.31-.67 2.19-1.91 2.19-3.35zm-11.71 4.2L6.8 12.46l1.41-1.42 2.26 2.26 4.8-5.23 1.47 1.36-6.2 6.77z"/>
+                </svg>
+              </span>
+            </div>
+            <span class=author-handle id="demoHandle">@SpaceX · 2h</span>
+          </div>
+        </div>
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="var(--text-sub)">
+          <path d="M3 12c0-1.1.9-2 2-2s2 .9 2 2-.9 2-2 2-2-.9-2-2zm9 2c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm7 0c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2z"/>
+        </svg>
+      </div>
+
+      <div class=tweet-content id="demoText">
+        Falcon 9 launches 23 Starlink satellites to orbit from Space Launch Complex 40 in Florida. 4K 60fps raw footage. 🛰️🚀
+      </div>
+
+      <!-- 模拟视频播放器 (干净原生无悬浮角标) -->
+      <div class=mock-player id="mockPlayer">
+        <div class=player-bg id="playerBg"></div>
+        <div class=player-center-icon>
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="#000">
+            <polygon points="6 4 20 12 6 20 6 4"/>
+          </svg>
+        </div>
+
+        <!-- 播放器底部控制条 -->
+        <div class=player-controls>
+          <div class=progress-bar-wrap>
+            <div class=progress-bar-fill></div>
+          </div>
+          <span class=control-time>0:42 / 1:28</span>
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="#d1d5db">
+            <path d="M15 3l2.3 2.3-2.89 2.87 1.42 1.42L18.7 6.7 21 9V3h-6zM3 9l2.3-2.3 2.87 2.89 1.42-1.42L6.7 5.3 9 3H3v6zm6 12l-2.3-2.3 2.89-2.87-1.42-1.42L5.3 17.3 3 15v6h6zm12-6l-2.3 2.3-2.87-2.89-1.42 1.42 2.89 2.87L15 21h6v-6z"/>
+          </svg>
+        </div>
+      </div>
+
+      <!-- 模拟配图推文 (测试单张原图下载) -->
+      <div class="tweet-card" id="imageTweetCard" style="margin-top: 14px;">
+        <div class="tweet-header">
+          <div class="tweet-author">
+            <div class="tweet-avatar" style="background: linear-gradient(135deg, #a855f7, #ec4899); font-size:14px; font-weight:700;">N</div>
+            <div class="author-meta">
+              <div class="author-name-row">
+                <span class="author-name">NASA Webb Telescope</span>
+                <span class="author-badge">
+                  <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
+                    <path d="M22.25 12c0-1.43-.88-2.67-2.19-3.34.46-1.39.2-2.9-.81-3.91s-2.52-1.27-3.91-.81c-.66-1.31-1.91-2.19-3.34-2.19s-2.67.88-3.33 2.19c-1.4-.46-2.91-.2-3.92.81s-1.26 2.52-.8 3.91c-1.31.67-2.2 1.91-2.2 3.34s.89 2.67 2.2 3.34c-.46 1.39-.21 2.9.8 3.91s2.52 1.26 3.91.81c.67 1.31 1.92 2.19 3.34 2.19s2.68-.88 3.34-2.19c1.39.45 2.9.19 3.91-.82s1.27-2.52.81-3.9c1.31-.67 2.19-1.91 2.19-3.35zm-11.71 4.2L6.8 12.46l1.41-1.42 2.26 2.26 4.8-5.23 1.47 1.36-6.2 6.77z"/>
+                  </svg>
+                </span>
+              </div>
+              <span class="author-handle">@NASAWebb · 5h</span>
+            </div>
+          </div>
+        </div>
+        <div class="tweet-content">
+          Deep space astrophotography captured by NIRCam. Loaded in camera raw <strong>name=orig</strong> resolution. ✨
+        </div>
+        <div id="demoPhotoWrapper" style="position:relative; width:100%; aspect-ratio:16/9; border-radius:12px; overflow:hidden; border:1px solid var(--border); background:#11141a; display:flex; align-items:center; justify-content:center; cursor:default;">
+          <div style="color:var(--text-muted); font-size:12px; font-weight:600;">
+            🌌 4800万像素太空照片 (自动替换为 name=orig)
+          </div>
+          <button id="demoSavePhotoBtn" class="demo-photo-btn">
+            <span>💾</span><span>下载此张原图</span>
+          </button>
+        </div>
+        <div style="font-size:11px; color:rgba(255, 255, 255, 0.7); margin-top:8px; display:flex; align-items:center; gap:5px;">
+          <span>💡</span><span>交互升级：鼠标移至图片右上角区域时才平滑唤出按钮，平时完全隐形，不打扰赏图</span>
+        </div>
+      </div>
+
+      <!-- 模拟广告推文 (测试广告拦截) -->
+      <div class="tweet-card" id="adTweetCard" style="margin-top: 14px; border-color: rgba(245, 158, 11, 0.3); background: rgba(245, 158, 11, 0.02);">
+        <div class="tweet-header">
+          <div class="tweet-author">
+            <div class="tweet-avatar" style="background:#f59e0b; font-size:12px; font-weight:700;">AD</div>
+            <div class="author-meta">
+              <div class="author-name-row">
+                <span class="author-name">Cloud Hosting Sponsor</span>
+                <span style="font-size:10px; font-weight:700; color:#f59e0b; background:rgba(245,158,11,0.15); padding:1px 6px; border-radius:999px;">Promoted</span>
+              </div>
+              <span class="author-handle">@CloudHost · 推广推文</span>
+            </div>
+          </div>
+        </div>
+        <div class="tweet-content" style="color:var(--text-muted); font-size:13px;">
+          ⚡ Special promo! Get 50% off cloud servers. (当开启右侧“屏蔽广告推广推文”时，此推文将被瞬间自动隐形剔除)
+        </div>
+      </div>
+    </div>
+
+    <!-- 右侧：模拟 Chrome 扩展弹窗 -->
+    <div class=popup-wrapper>
+      <main class=popup-container>
+        <!-- Header -->
+        <header class=header>
+          <div class=brand>
+            <div class=brand-logo aria-hidden=true>
+              <svg viewBox="0 0 24 24" class="brand-x">
+                <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" fill="currentColor"/>
+              </svg>
+            </div>
+            <div class=brand-info>
+              <h1 class=brand-title>X Video Quality</h1>
+              <span class=brand-badge>PRO</span>
+            </div>
+          </div>
+
+          <span id="statusText" class="status-pill" role="status">
+            <span id="statusDot" class="status-dot"></span>
+            <span id="statusLabel">已就绪</span>
+          </span>
+        </header>
+
+        <!-- 开关控制行 -->
+        <section class=control-card>
+          <label class=toggle-row for="enabledToggle">
+            <div class=toggle-copy>
+              <span class=toggle-title>强制画质锁定</span>
+              <span class=toggle-desc>优先拉取所选清晰度 HLS 流</span>
+            </div>
+            <div class=switch>
+              <input id="enabledToggle" type="checkbox" checked>
+              <span class="switch-track" aria-hidden="true"></span>
+            </div>
+          </label>
+        </section>
+
+        <!-- 画质选择药丸网格 -->
+        <section class=quality-section>
+          <div class=section-header>
+            <span class=section-title>画质上限</span>
+            <span class=section-hint>点击即时生效</span>
+          </div>
+
+          <div class=pill-grid>
+            <button type="button" class="pill-btn pill-btn--full" data-quality="best">
+              <div class="pill-content">
+                <span class="pill-main">最高可用</span>
+                <span class="pill-sub">始终锁定源流最高品质</span>
+              </div>
+              <span class="pill-badge">Auto MAX</span>
+            </button>
+
+            <button type="button" class="pill-btn" data-quality="2160">
+              <span class="pill-main">4K</span>
+              <span class="pill-sub">2160p</span>
+            </button>
+
+            <button type="button" class="pill-btn" data-quality="1440">
+              <span class="pill-main">2K</span>
+              <span class="pill-sub">1440p</span>
+            </button>
+
+            <button type="button" class="pill-btn is-active" data-quality="1080">
+              <span class="pill-main">1080p</span>
+              <span class="pill-sub">FHD 原画</span>
+            </button>
+
+            <button type="button" class="pill-btn" data-quality="720">
+              <span class="pill-main">720p</span>
+              <span class="pill-sub">HD 高清</span>
+            </button>
+
+            <button type="button" class="pill-btn" data-quality="480">
+              <span class="pill-main">480p</span>
+              <span class="pill-sub">标清</span>
+            </button>
+
+            <button type="button" class="pill-btn" data-quality="360">
+              <span class="pill-main">360p</span>
+              <span class="pill-sub">极速省流</span>
+            </button>
+          </div>
+        </section>
+
+        <!-- 实时媒体状态卡片 -->
+        <section class=media-card>
+          <div class=media-header>
+            <div class=media-title-wrap>
+              <svg class="media-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+                <polygon points="5 3 19 12 5 21 5 3"></polygon>
+              </svg>
+              <span class="media-heading">播放监测</span>
+            </div>
+            <span id="siteStatus" class="site-badge">x.com / 支持中</span>
+          </div>
+
+          <div class=stat-grid>
+            <div class=stat-box>
+              <span class=stat-label>生效分辨率</span>
+              <span id="lastResolution" class="stat-value stat-value--highlight">1080x1920</span>
+            </div>
+            <div class=stat-box>
+              <span class=stat-label>目标锁定档</span>
+              <span id="targetQuality" class="stat-value">1080p</span>
+            </div>
+          </div>
+
+          <div class=info-list>
+            <div class=info-item>
+              <span class=info-key>博主作者</span>
+              <span id="lastAuthorName" class="info-val">SpaceX</span>
+            </div>
+            <div class=info-item>
+              <span class=info-key>流媒体码率</span>
+              <span id="lastVideo" class="info-val info-val--truncate">1080p / 5.8 Mbps</span>
+            </div>
+          </div>
+
+          <!-- 快捷操作栏 -->
+          <div class=action-buttons-row>
+            <button id="copyStreamBtn" class="action-btn" type="button" title="复制当前检测到的原画 M3U8 直链">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+              </svg>
+              <span id="copyBtnLabel">复制直链</span>
+            </button>
+            <button id="downloadStreamBtn" class="action-btn" type="button" title="下载原画流文件">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="7 10 12 15 17 10"></polyline>
+                <line x1="12" y1="15" x2="12" y2="3"></line>
+              </svg>
+              <span>下载流</span>
+            </button>
+          </div>
+        </section>
+
+        <!-- 播放控制增强套件 -->
+        <section class=playback-card>
+          <div class=playback-header>
+            <div class=playback-title-wrap>
+              <svg class="playback-icon" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2">
+                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+              </svg>
+              <span class="playback-title">播放增强</span>
+            </div>
+            <button id="pipToggleBtn" class="pip-btn" type="button" title="独立画中画播放">
+              <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="2" y="3" width="20" height="14" rx="2"></rect>
+                <rect x="12" y="9" width="8" height="6" rx="1" fill="currentColor" opacity="0.3"></rect>
+              </svg>
+              <span id="pipBtnText">画中画</span>
+            </button>
+          </div>
+          <div class=speed-row>
+            <span class=speed-label>播放倍速</span>
+            <div class=speed-pills>
+              <button type="button" class="speed-pill is-active" data-speed="1">1.0x</button>
+              <button type="button" class="speed-pill" data-speed="1.25">1.25x</button>
+              <button type="button" class="speed-pill" data-speed="1.5">1.5x</button>
+              <button type="button" class="speed-pill" data-speed="2">2.0x</button>
+            </div>
+          </div>
+        <!-- X 深度生态增强设置卡片 -->
+        <section class="enhancement-card" aria-label="X 深度增强设置">
+          <div class="enhancement-header">
+            <div class="enhancement-title-wrap">
+              <svg class="enhancement-icon" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"></path>
+              </svg>
+              <span class="enhancement-title">X 体验与净化</span>
+            </div>
+          </div>
+
+          <div class="enhancement-list">
+            <label class="enhancement-item" for="blockAdsToggle">
+              <div class="enhancement-copy">
+                <span class="enhancement-name">屏蔽广告推广推文</span>
+                <span class="enhancement-desc">自动隐藏 Promoted/赞助推文</span>
+              </div>
+              <div class="mini-switch">
+                <input id="blockAdsToggle" type="checkbox" checked>
+                <span class="mini-track"></span>
+              </div>
+            </label>
+
+            <label class="enhancement-item" for="forceOrigToggle">
+              <div class="enhancement-copy">
+                <span class="enhancement-name">推文图片强制原画</span>
+                <span class="enhancement-desc">加载相机直出无损画质 (name=orig)</span>
+              </div>
+              <div class="mini-switch">
+                <input id="forceOrigToggle" type="checkbox" checked>
+                <span class="mini-track"></span>
+              </div>
+            </label>
+
+            <label class="enhancement-item" for="cleanLinksToggle">
+              <div class="enhancement-copy">
+                <span class="enhancement-name">纯净短链与去追踪</span>
+                <span class="enhancement-desc">复制去尾巴，外链绕过 t.co</span>
+              </div>
+              <div class="mini-switch">
+                <input id="cleanLinksToggle" type="checkbox" checked>
+                <span class="mini-track"></span>
+              </div>
+            </label>
+
+            <label class="enhancement-item" for="hideSidebarToggle">
+              <div class="enhancement-copy">
+                <span class="enhancement-name">隐藏侧边栏推广</span>
+                <span class="enhancement-desc">折叠推荐关注与订阅 Premium</span>
+              </div>
+              <div class="mini-switch">
+                <input id="hideSidebarToggle" type="checkbox" checked>
+                <span class="mini-track"></span>
+              </div>
+            </label>
+          </div>
+        </section>
+
+        <!-- 底部辅助设置 -->
+        <footer class=footer-bar>
+          <label class=checkbox-wrap for="debugToggle">
+            <input id="debugToggle" type="checkbox">
+            <span class="checkbox-label">调试日志</span>
+          </label>
+
+          <button id="clearButton" class="ghost-btn" type="button" title="重置状态缓存">
+            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="1 4 1 10 7 10"></polyline>
+              <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+            </svg>
+            <span>清除记录</span>
+          </button>
+        </footer>
+      </main>
+    </div>
+
+  </div>
+
+  <script>
+    const labels = {
+      best: '最高可用',
+      '2160': '4K / 2160p',
+      '1440': '2K / 1440p',
+      '1080': '1080p',
+      '720': '720p',
+      '480': '480p',
+      '360': '360p'
+    };
+
+    const enabledToggle = document.getElementById('enabledToggle');
+    const statusDot = document.getElementById('statusDot');
+    const statusLabel = document.getElementById('statusLabel');
+    const pills = document.querySelectorAll('.pill-btn');
+    const targetQuality = document.getElementById('targetQuality');
+    const lastResolution = document.getElementById('lastResolution');
+    const lastAuthorName = document.getElementById('lastAuthorName');
+    const lastVideo = document.getElementById('lastVideo');
+    const clearButton = document.getElementById('clearButton');
+    const copyStreamBtn = document.getElementById('copyStreamBtn');
+    const copyBtnLabel = document.getElementById('copyBtnLabel');
+    const downloadStreamBtn = document.getElementById('downloadStreamBtn');
+    const pipToggleBtn = document.getElementById('pipToggleBtn');
+    const pipBtnText = document.getElementById('pipBtnText');
+    const speedPills = document.querySelectorAll('.speed-pill');
+    const mockActionBadge = document.getElementById('mockActionBadge');
+
+    let currentStreamUrl = 'https://video.twimg.com/ext_tw_video/1890000000/pu/pl/1080x1920/master.m3u8';
+
+    // 开关切换
+    enabledToggle.addEventListener('change', () => {
+      const active = enabledToggle.checked;
+      statusDot.classList.toggle('is-disabled', !active);
+      statusLabel.textContent = active ? '已启用' : '已停用';
+      mockActionBadge.textContent = active ? (lastResolution.textContent.includes('2160') ? '4K' : '1080') : 'OFF';
+      mockActionBadge.style.background = active ? '#ffffff' : '#333338';
+      mockActionBadge.style.color = active ? '#000000' : '#ffffff';
+    });
+
+    // 药丸画质切换
+    pills.forEach(pill => {
+      pill.addEventListener('click', () => {
+        pills.forEach(p => p.classList.remove('is-active'));
+        pill.classList.add('is-active');
+        const q = pill.getAttribute('data-quality');
+        targetQuality.textContent = labels[q] || q;
+      });
+    });
+
+    // 复制直链按钮交互
+    copyStreamBtn.addEventListener('click', () => {
+      navigator.clipboard.writeText(currentStreamUrl);
+      copyBtnLabel.textContent = '已复制直链!';
+      copyStreamBtn.classList.add('action-btn--success');
+      setTimeout(() => {
+        copyBtnLabel.textContent = '复制直链';
+        copyStreamBtn.classList.remove('action-btn--success');
+      }, 1600);
+    });
+
+    // 下载流交互
+    downloadStreamBtn.addEventListener('click', () => {
+      alert('已触发原画流文件下载：' + currentStreamUrl);
+    });
+
+    // 画中画切换
+    let isPip = false;
+    pipToggleBtn.addEventListener('click', () => {
+      isPip = !isPip;
+      pipToggleBtn.classList.toggle('is-active', isPip);
+      pipBtnText.textContent = isPip ? '退出画中画' : '画中画';
+    });
+
+    // 倍速调节
+    speedPills.forEach(pill => {
+      pill.addEventListener('click', () => {
+        speedPills.forEach(p => p.classList.remove('is-active'));
+        pill.classList.add('is-active');
+      });
+    });
+
+    // 广告屏蔽开关联动
+    const blockAdsToggle = document.getElementById('blockAdsToggle');
+    const adTweetCard = document.getElementById('adTweetCard');
+    if (blockAdsToggle && adTweetCard) {
+      blockAdsToggle.addEventListener('change', () => {
+        adTweetCard.style.display = blockAdsToggle.checked ? 'none' : 'block';
+      });
+      adTweetCard.style.display = blockAdsToggle.checked ? 'none' : 'block';
+    }
+
+    // 单张原图下载演示（仅当鼠标悬浮在右上角区域时唤出）
+    const demoPhotoWrapper = document.getElementById('demoPhotoWrapper');
+    const demoSavePhotoBtn = document.getElementById('demoSavePhotoBtn');
+    if (demoPhotoWrapper && demoSavePhotoBtn) {
+      demoPhotoWrapper.addEventListener('mousemove', (e) => {
+        const rect = demoPhotoWrapper.getBoundingClientRect();
+        const relX = e.clientX - rect.left;
+        const relY = e.clientY - rect.top;
+        const triggerW = Math.min(180, Math.max(90, rect.width * 0.38));
+        const triggerH = Math.min(120, Math.max(70, rect.height * 0.38));
+        const inTopRight = (rect.width - relX <= triggerW) && (relY <= triggerH);
+        if (inTopRight || demoSavePhotoBtn.contains(e.target)) {
+          demoSavePhotoBtn.classList.add('visible');
+        } else {
+          demoSavePhotoBtn.classList.remove('visible');
+        }
+      });
+      demoPhotoWrapper.addEventListener('mouseleave', () => {
+        demoSavePhotoBtn.classList.remove('visible');
+      });
+      demoSavePhotoBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        alert('已触发单张原图下载：\nhttps://pbs.twimg.com/media/GWebb_Space_Photo?format=jpg&name=orig\n\n以无损相机直出分辨率保存此张选中的图片！');
+      });
+    }
+
+    // 清除记录
+    clearButton.addEventListener('click', () => {
+      lastResolution.textContent = '-';
+      lastAuthorName.textContent = '暂无记录';
+      lastVideo.textContent = '暂无记录';
+      mockActionBadge.textContent = '';
+    });
+
+    // 模拟 1080p
+    document.getElementById('mockVideoBtn').addEventListener('click', () => {
+      lastResolution.textContent = '1080x1920 (60fps)';
+      lastAuthorName.textContent = 'SpaceX';
+      lastVideo.textContent = '1080p / 5.8 Mbps';
+      currentStreamUrl = 'https://video.twimg.com/ext_tw_video/1890000000/pu/pl/1080x1920/spacex_falcon.m3u8';
+      mockActionBadge.textContent = '1080';
+      mockActionBadge.style.background = '#ffffff';
+      mockActionBadge.style.color = '#000000';
+
+      document.getElementById('demoAuthor').textContent = 'SpaceX';
+      document.getElementById('demoHandle').textContent = '@SpaceX · 2h';
+      document.getElementById('demoText').textContent = 'Falcon 9 launches 23 Starlink satellites to orbit in 1080p 60fps. 🛰️🚀';
+      document.getElementById('demoAvatar').textContent = 'S';
+    });
+
+    // 模拟 4K
+    document.getElementById('mock4KBtn').addEventListener('click', () => {
+      lastResolution.textContent = '3840x2160 (60fps)';
+      lastAuthorName.textContent = 'MKBHD';
+      lastVideo.textContent = '4K / 19.2 Mbps';
+      currentStreamUrl = 'https://video.twimg.com/ext_tw_video/1899999999/pu/pl/3840x2160/mkbhd_4k.m3u8';
+      mockActionBadge.textContent = '4K';
+      mockActionBadge.style.background = '#ffffff';
+      mockActionBadge.style.color = '#000000';
+
+      document.getElementById('demoAuthor').textContent = 'Marques Brownlee';
+      document.getElementById('demoHandle').textContent = '@MKBHD · 45m';
+      document.getElementById('demoText').textContent = 'Testing the new camera sensor rig in full 4K 60fps ProRes. Notice the dynamic range difference!';
+      document.getElementById('demoAvatar').textContent = 'M';
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,49 @@
+{
+  "manifest_version": 3,
+  "name": "X Video Best Quality",
+  "description": "Force X/Twitter web videos to use the highest available HLS quality.",
+  "version": "1.0.0",
+  "permissions": [
+    "storage",
+    "activeTab",
+    "downloads",
+    "clipboardWrite"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_popup": "popup.html"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://x.com/*",
+        "https://twitter.com/*",
+        "https://mobile.x.com/*",
+        "https://mobile.twitter.com/*",
+        "https://pro.x.com/*",
+        "https://pro.twitter.com/*"
+      ],
+      "js": [
+        "bridge.js"
+      ],
+      "run_at": "document_start"
+    },
+    {
+      "matches": [
+        "https://x.com/*",
+        "https://twitter.com/*",
+        "https://mobile.x.com/*",
+        "https://mobile.twitter.com/*",
+        "https://pro.x.com/*",
+        "https://pro.twitter.com/*"
+      ],
+      "js": [
+        "pageHook.js"
+      ],
+      "world": "MAIN",
+      "run_at": "document_start"
+    }
+  ]
+}

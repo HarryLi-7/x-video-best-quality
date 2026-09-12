@@ -1,0 +1,264 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>X Video Best Quality</title>
+    <link rel="stylesheet" href="popup.css">
+  </head>
+  <body>
+    <main class="panel">
+      <!-- 顶部 Header -->
+      <header class="header">
+        <div class="brand">
+          <div class="brand-logo" aria-hidden="true">
+            <svg viewBox="0 0 24 24" class="brand-x">
+              <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" fill="currentColor"/>
+            </svg>
+          </div>
+          <div class="brand-info">
+            <h1 class="brand-title">X Video Quality</h1>
+            <span class="brand-badge">PRO</span>
+          </div>
+        </div>
+
+        <span id="statusText" class="status-pill" role="status" aria-live="polite">
+          <span id="statusDot" class="status-dot" aria-hidden="true"></span>
+          <span id="statusLabel">已就绪</span>
+        </span>
+      </header>
+
+      <!-- 开关控制行 -->
+      <section class="control-card">
+        <label class="toggle-row" for="enabledToggle">
+          <div class="toggle-copy">
+            <span class="toggle-title">强制画质锁定</span>
+            <span class="toggle-desc">优先拉取所选清晰度 HLS 流</span>
+          </div>
+          <div class="switch">
+            <input id="enabledToggle" type="checkbox" checked>
+            <span class="switch-track" aria-hidden="true"></span>
+          </div>
+        </label>
+      </section>
+
+      <!-- 画质选择药丸网格 -->
+      <section class="quality-section">
+        <div class="section-header">
+          <span class="section-title">画质上限</span>
+          <span class="section-hint">点击即时生效</span>
+        </div>
+
+        <!-- 隐藏的原生 select，保持旧逻辑/表单最大兼容 -->
+        <select id="qualityCapSelect" class="sr-only" tabindex="-1" aria-hidden="true">
+          <option value="best">最高可用</option>
+          <option value="2160">4K / 2160p</option>
+          <option value="1440">2K / 1440p</option>
+          <option value="1080" selected>1080p</option>
+          <option value="720">720p</option>
+          <option value="480">480p</option>
+          <option value="360">360p</option>
+        </select>
+
+        <div class="pill-grid" role="radiogroup" aria-label="画质上限选择">
+          <button type="button" class="pill-btn pill-btn--full" data-quality="best" role="radio" aria-checked="false">
+            <div class="pill-content">
+              <span class="pill-main">最高可用</span>
+              <span class="pill-sub">始终锁定源流最高品质</span>
+            </div>
+            <span class="pill-badge">Auto MAX</span>
+          </button>
+
+          <button type="button" class="pill-btn" data-quality="2160" role="radio" aria-checked="false">
+            <span class="pill-main">4K</span>
+            <span class="pill-sub">2160p</span>
+          </button>
+
+          <button type="button" class="pill-btn" data-quality="1440" role="radio" aria-checked="false">
+            <span class="pill-main">2K</span>
+            <span class="pill-sub">1440p</span>
+          </button>
+
+          <button type="button" class="pill-btn is-active" data-quality="1080" role="radio" aria-checked="true">
+            <span class="pill-main">1080p</span>
+            <span class="pill-sub">FHD 原画</span>
+          </button>
+
+          <button type="button" class="pill-btn" data-quality="720" role="radio" aria-checked="false">
+            <span class="pill-main">720p</span>
+            <span class="pill-sub">HD 高清</span>
+          </button>
+
+          <button type="button" class="pill-btn" data-quality="480" role="radio" aria-checked="false">
+            <span class="pill-main">480p</span>
+            <span class="pill-sub">标清</span>
+          </button>
+
+          <button type="button" class="pill-btn" data-quality="360" role="radio" aria-checked="false">
+            <span class="pill-main">360p</span>
+            <span class="pill-sub">极速省流</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- 实时媒体状态卡片 -->
+      <section class="media-card" aria-label="播放信息">
+        <div class="media-header">
+          <div class="media-title-wrap">
+            <svg class="media-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="5 3 19 12 5 21 5 3"></polygon>
+            </svg>
+            <span class="media-heading">播放监测</span>
+          </div>
+          <span id="siteStatus" class="site-badge">检测中...</span>
+        </div>
+
+        <div class="stat-grid">
+          <div class="stat-box">
+            <span class="stat-label">生效分辨率</span>
+            <span id="lastResolution" class="stat-value stat-value--highlight">-</span>
+          </div>
+          <div class="stat-box">
+            <span class="stat-label">目标锁定档</span>
+            <span id="targetQuality" class="stat-value">1080p</span>
+          </div>
+        </div>
+
+        <div class="info-list">
+          <div class="info-item">
+            <span class="info-key">博主作者</span>
+            <span id="lastAuthorName" class="info-val">暂无记录</span>
+          </div>
+          <div class="info-item">
+            <span class="info-key">流媒体码率</span>
+            <span id="lastVideo" class="info-val info-val--truncate">暂无记录</span>
+          </div>
+        </div>
+
+        <!-- 快捷操作栏 (复制直链 / 一键下载) -->
+        <div class="action-buttons-row">
+          <button id="copyStreamBtn" class="action-btn" type="button" title="复制当前检测到的原画 M3U8 直链">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+            </svg>
+            <span id="copyBtnLabel">复制直链</span>
+          </button>
+          <button id="downloadStreamBtn" class="action-btn" type="button" title="下载当前原画流文件">
+            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+            <span>下载流</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- 播放控制套件 (画中画 + 倍速) -->
+      <section class="playback-card" aria-label="播放控制套件">
+        <div class="playback-header">
+          <div class="playback-title-wrap">
+            <svg class="playback-icon" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+            </svg>
+            <span class="playback-title">播放增强</span>
+          </div>
+          <button id="pipToggleBtn" class="pip-btn" type="button" title="独立画中画播放">
+            <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2" y="3" width="20" height="14" rx="2"></rect>
+              <rect x="12" y="9" width="8" height="6" rx="1" fill="currentColor" opacity="0.3"></rect>
+            </svg>
+            <span id="pipBtnText">画中画</span>
+          </button>
+        </div>
+        <div class="speed-row">
+          <span class="speed-label">播放倍速</span>
+          <div class="speed-pills" role="radiogroup" aria-label="倍速调节">
+            <button type="button" class="speed-pill is-active" data-speed="1" role="radio" aria-checked="true">1.0x</button>
+            <button type="button" class="speed-pill" data-speed="1.25" role="radio" aria-checked="false">1.25x</button>
+            <button type="button" class="speed-pill" data-speed="1.5" role="radio" aria-checked="false">1.5x</button>
+            <button type="button" class="speed-pill" data-speed="2" role="radio" aria-checked="false">2.0x</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- X 体验与时间线净化卡片 -->
+      <section class="enhancement-card" aria-label="X 深度增强设置">
+        <div class="enhancement-header">
+          <div class="enhancement-title-wrap">
+            <svg class="enhancement-icon" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"></path>
+            </svg>
+            <span class="enhancement-title">X 体验与净化</span>
+          </div>
+        </div>
+
+        <div class="enhancement-list">
+          <label class="enhancement-item" for="blockAdsToggle">
+            <div class="enhancement-copy">
+              <span class="enhancement-name">屏蔽广告推广推文</span>
+              <span class="enhancement-desc">隐藏时间线 Promoted / 赞助推文</span>
+            </div>
+            <div class="mini-switch">
+              <input id="blockAdsToggle" type="checkbox" checked>
+              <span class="mini-track"></span>
+            </div>
+          </label>
+
+          <label class="enhancement-item" for="forceOrigToggle">
+            <div class="enhancement-copy">
+              <span class="enhancement-name">推文图片强制原画</span>
+              <span class="enhancement-desc">加载相机直出原图 (右上角悬停唤出下载)</span>
+            </div>
+            <div class="mini-switch">
+              <input id="forceOrigToggle" type="checkbox" checked>
+              <span class="mini-track"></span>
+            </div>
+          </label>
+
+          <label class="enhancement-item" for="cleanLinksToggle">
+            <div class="enhancement-copy">
+              <span class="enhancement-name">纯净短链与去追踪</span>
+              <span class="enhancement-desc">复制去追踪小尾巴，直连绕过 t.co</span>
+            </div>
+            <div class="mini-switch">
+              <input id="cleanLinksToggle" type="checkbox" checked>
+              <span class="mini-track"></span>
+            </div>
+          </label>
+
+          <label class="enhancement-item" for="hideSidebarToggle">
+            <div class="enhancement-copy">
+              <span class="enhancement-name">隐藏侧边栏推广</span>
+              <span class="enhancement-desc">折叠推荐关注与订阅 Premium 横幅</span>
+            </div>
+            <div class="mini-switch">
+              <input id="hideSidebarToggle" type="checkbox" checked>
+              <span class="mini-track"></span>
+            </div>
+          </label>
+        </div>
+      </section>
+
+      <!-- 底部辅助设置 -->
+      <footer class="footer-bar">
+        <label class="checkbox-wrap" for="debugToggle">
+          <input id="debugToggle" type="checkbox">
+          <span class="checkbox-custom"></span>
+          <span class="checkbox-label">调试日志</span>
+        </label>
+
+        <button id="clearButton" class="ghost-btn" type="button" title="重置状态缓存">
+          <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="1 4 1 10 7 10"></polyline>
+            <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path>
+          </svg>
+          <span>清除记录</span>
+        </button>
+      </footer>
+    </main>
+
+    <script src="popup.js"></script>
+  </body>
+</html>

@@ -20,8 +20,8 @@
   var TYPE_ERROR = "XVBQ_ERROR";
 
   var settings = {
-    ready: false,
-    enabled: false,
+    ready: true,
+    enabled: true,
     debug: false,
     qualityCap: "1080"
   };
@@ -96,8 +96,11 @@
     try {
       var parsed = new URL(url, window.location.href);
       var href = parsed.href.toLowerCase();
+      var host = parsed.hostname.toLowerCase();
+      var isTwimg = host === "video.twimg.com" || host.endsWith(".twimg.com");
+      var isX = host === "x.com" || host.endsWith(".x.com") || host === "twitter.com" || host.endsWith(".twitter.com");
       return (
-        parsed.hostname.toLowerCase() === "video.twimg.com" &&
+        (isTwimg || isX) &&
         (parsed.pathname.toLowerCase().indexOf(".m3u8") !== -1 ||
           href.indexOf(".m3u8") !== -1)
       );
@@ -139,7 +142,7 @@
         break;
       }
 
-      var key = line.slice(keyStart, index).trim();
+      var key = line.slice(keyStart, index).trim().toUpperCase();
       index += 1;
 
       var value = "";
@@ -345,7 +348,7 @@
       }
 
       if (trimmed[0] === "#") {
-        if (trimmed.indexOf("#EXT") === 0) {
+        if (trimmed.indexOf("#EXT-X-STREAM-INF") === 0) {
           return -1;
         }
 

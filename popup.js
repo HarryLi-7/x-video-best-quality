@@ -227,8 +227,12 @@
         var targetQuality = btn.getAttribute("data-quality");
         var nextQualityCap = normalizeQualityCap(targetQuality);
         state.qualityCap = nextQualityCap;
+        state.lastResolution = "";
+        state.lastQuality = "";
         chrome.storage.local.set({
-          qualityCap: nextQualityCap
+          qualityCap: nextQualityCap,
+          lastResolution: "",
+          lastQuality: ""
         });
         updateQualityCapUi();
         updateLastVideoUi();
@@ -245,9 +249,14 @@
       var nextQualityCap = normalizeQualityCap(elements.qualityCapSelect.value);
       elements.qualityCapSelect.value = nextQualityCap;
       state.qualityCap = nextQualityCap;
+      state.lastResolution = "";
+      state.lastQuality = "";
       chrome.storage.local.set({
-        qualityCap: nextQualityCap
+        qualityCap: nextQualityCap,
+        lastResolution: "",
+        lastQuality: ""
       });
+      updateQualityCapUi();
       updateAuthorUi();
       updateLastVideoUi();
     });
